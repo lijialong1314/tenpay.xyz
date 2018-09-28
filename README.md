@@ -26,7 +26,7 @@
 2、启动Workerman：
 
 ```php
-php start.php start
+php src/start.php start
 ```
 
 **Demo**
