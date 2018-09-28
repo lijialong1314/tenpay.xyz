@@ -32,3 +32,9 @@ php start.php start
 **Demo**
 
 https://tenpay.xyz
+
+**感谢**
+
+PAYJS SDK：https://github.com/xhat/payjs
+
+YouZanPay SDK：https://github.com/xu42/pay
