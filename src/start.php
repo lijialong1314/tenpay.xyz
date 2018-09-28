@@ -54,7 +54,7 @@ $worker->onMessage = function ($connection, $message) use ($worker) {
         "AppSecretKey"=>$config["007"]["appkey"],
         "Ticket"=>$data["ticket"],
         "Randstr"=>$data["randstr"],
-        "UserIP"=>$_SERVER["REMOTE_ADDR"]
+        "UserIP"=>"127.0.0.1"
     ];
     $url = "https://ssl.captcha.qq.com/ticket/verify?".http_build_query($param007);
     $result = file_get_contents($url);
