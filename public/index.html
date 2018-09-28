@@ -1,0 +1,182 @@
+<html lang="zh_CN">
+<head>
+    <meta charset="UTF-8">
+    <title>个人在线收款Demo</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+    <meta name="description" content="个人收款-有赞云+PayjS，支持支付宝、微信、信用卡、储蓄卡。">
+    <link href="//baidu.beecdn.cn/libs/mdui/0.4.1/css/mdui.min.css" rel="stylesheet" />
+    <script src="//baidu.beecdn.cn/libs/mdui/0.4.1/js/mdui.min.js"></script>
+    <script src="https://ssl.captcha.qq.com/TCaptcha.js"></script>
+    <style>
+    .main {
+        margin-top:50px;
+        margin-bottom:100px;
+    }
+    .payqr{
+        margin-top:10px;
+    }
+    </style>
+</head>
+<body class="mdui-theme-primary-indigo mdui-theme-accent-pink">
+        <div class="mdui-appbar">
+          <div class="mdui-toolbar mdui-color-theme">
+            <a href="javascript:;" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">&#xe850;</i></a>
+            <a href="javascript:;" class="mdui-typo-title">个人在线收款</a>
+          </div>
+        </div>
+      
+        <div class="mdui-container main" id="maindev">
+            <div class="mdui-row">
+                <div class="mdui-col-xs-12 mdui-typo">
+                    <h3>欢迎体验个人收款免签约(速签)方案</h3>
+                    <p>目前支付宝和微信官方都没有个人可用的在线收款功能，仅提供了手动生成收款码的繁琐操作，如果想弄个动态的，往往会遇到很多门槛，比如企业资质、月租金等等。</p>
+                    <p>市面上还有很多基于安卓APP监听的收款方案，只想说，你们开心就好。</p>
+                    <p>这里推荐两种稳定可靠的方案：</p>
+                    <p>1、推荐：<a href="https://payjs.cn/ref/DXVLLD" target="_blank">PayJS.CN</a>，直接和微信官方快速签约成为<mark>个人微信支付商户</mark>，费率为每笔0.38%</p>
+                    <p>2、<a href="https://www.youzanyun.com/apilist/detail/group_trade/pay_qrcode/youzan.pay.qrcode.create" target="_blank">有赞云+有赞微小店</a>，利用有赞云接口给自己的微小店创建收款二维码，费率为每笔1%</p>
+                    <p>
+                        您可以在这个页面上了解更多：<a target="_blank" href="https://github.com/xu42/pay">https://github.com/xu42/pay</a>，<a target="_blank" href="https://help.payjs.cn/">PayJS Help</a>
+                    </p>
+                    <p>技术问题，可以QQ联系我： 702018304</p>
+                </div>
+            </div>
+            <div class="mdui-row">
+                <div class="mdui-col-xs-12 mdui-typo">
+                         <h3>立即尝鲜</h3>
+                         <div class="mdui-textfield">
+                              <label class="mdui-textfield-label">您的昵称</label>
+                              <input class="mdui-textfield-input  nickname" type="text" value="匿名" required />
+                              <div class="mdui-textfield-error">昵称不能为空</div>
+                        </div>
+                        <div class="mdui-textfield">
+                              <label class="mdui-textfield-label">金额（单位：元）</label>
+                              <input class="mdui-textfield-input  price" type="text"  value="0.01" required />
+                              <div class="mdui-textfield-error">金额不能为空</div>
+                        </div>
+                         <div class="mdui-textfield">
+                              <label class="mdui-textfield-label">选择支付服务商</label>
+                              <select class="mdui-select payservice">
+                                  <option value="payjs">PAYJS（仅支持微信）</option>
+                                  <option value="youzan">有赞云（支持微信和支付宝）</option>
+                                </select>
+                        </div>
+                         
+                         <button  onclick="genqr()" class="mdui-btn mdui-btn-block mdui-color-theme-accent mdui-ripple" style="margin-top:20px;">生成付款二维码</button>
+                         
+                         <div class="mdui-progress">
+                            <div class="mdui-progress-indeterminate"></div>
+                        </div>
+                         
+                         <div class="payqr ">
+                                <img class="mdui-img-rounded mdui-center payimg"  />
+                         </div>
+                         
+                </div>
+            </div>
+            <div class="mdui-row">
+                <div class="mdui-col-md-6 mdui-col-offset-md-3 mdui-typo mdui-text-center" style="margin-top:50px;">沪ICP备15027210号-7</div>
+            </div>
+        </div>
+       
+       
+</body>
+
+<script>
+var clientId = "";
+var $$ = mdui.JQ;
+
+$$(function () { 
+    $$(".mdui-progress").hide();
+    $$(".payqr").hide();
+})
+
+
+var ws = new WebSocket("wss://tenpay.xyz:3600");
+ws.onmessage = function (response) {
+    console.log(response);
+    var responseObj = JSON.parse(response.data);
+    if (responseObj.code !== 200) {
+        showalert(responseObj.msg);
+        return;
+    }
+    if (responseObj.event === "pay") {
+            if (responseObj.data === "WAIT_BUYER_PAY") {
+                showimg("https://baidu.beecdn.cn/donate/wait_pay.png");
+                showalert("您已扫码，等待支付中~");
+            }
+            if (responseObj.data === "TRADE_SUCCESS" || responseObj.data === "PAID") {
+                showimg("https://baidu.beecdn.cn/donate/payok.png");
+                showalert("您已支付成功，谢谢关注~");
+            }
+        }
+    if (responseObj.event === "create") {
+        showimg(responseObj.data.qr);
+        showalert("付款二维码生成成功");
+    }
+};
+
+function showimg(img){
+    $$(".payimg").attr("src",img);
+    $$(".mdui-progress").hide();
+    $$(".mdui-btn").removeClass("disabled");
+    $$(".payqr").show();
+}
+
+function showalert(text){
+    mdui.snackbar({
+      message: text
+    });
+}
+function isNumber(val){
+    var regPos = /^\d+(\.\d+)?$/; //非负浮点数
+    if(regPos.test(val)){
+        return true;
+    }else{
+        return false;
+    }
+}
+function genqr(){
+
+    var  service = $$(".payservice").val();
+    var  nickname = $$(".nickname").val();
+    var  price = $$(".price").val();
+    if(price <=0){
+        showalert("金额不能小于0");
+        return;
+    }
+    if(!isNumber(price)){
+        showalert("请输入正确的金额，单位为元");
+        return;
+    }
+
+    var captcha1 = new TencentCaptcha('2086379562', function(res) {
+        console.log(res);
+        if(res.ret === 0){
+            var ticket = res.ticket;
+            var randstr = res.randstr;
+            var clientId = $$.guid();
+            var msg = {"userid":clientId,"price":price,"desc":nickname+"体验个人收款","service":service,"ticket":ticket,"randstr":randstr};
+            
+            $$(".mdui-btn").addClass("disabled");
+            $$(".mdui-progress").show();
+            $$(".payqr").hide();
+            
+            ws.send(JSON.stringify(msg));
+            
+        }else{
+            showalert("验证失败");
+        }
+    });
+    captcha1.show(); // 显示验证码
+}
+</script>
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?490cdd9f2491e4cc4f1da715f4c16d69";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+</html>
